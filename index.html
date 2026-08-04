@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3단계 · 질문 원정대</title>
+<style>
+  :root{
+    --ink:#2b2a28; --paper:#faf8f4; --line:#d8d3c8;
+    --accent:#8a6d3b; --accent-deep:#5c4a28; --wrong:#a24b3f; --ok:#3f6b4f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--paper);
+    font-family: "Noto Serif KR", "Georgia", serif; color:var(--ink);
+    display:flex; justify-content:center; padding:32px 18px 60px;
+  }
+  .card{ width:100%; max-width:480px; }
+  .stage-label{
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:13px; letter-spacing:.18em; color:var(--accent);
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .progress{ display:flex; gap:6px; margin-bottom:22px; }
+  .dot{ width:26px;height:5px;border-radius:3px; background:var(--line); }
+  .dot.done{background:var(--accent);}
+  h1{ font-size:23px; line-height:1.4; margin:0 0 6px; font-weight:700; }
+  .sub{
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:14px; color:#6b6559; margin-bottom:22px;
+  }
+
+  .mission{
+    background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent);
+    padding:16px 20px; margin-bottom:20px;
+  }
+  .mission p{
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:14.5px; line-height:1.8; margin:0; color:var(--ink);
+  }
+
+  .puzzle-img{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:8px;
+    display:block;
+  }
+  .img-caption{
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:12.5px;
+    color:#8a8375;
+    text-align:center;
+    margin-bottom:22px;
+  }
+
+  .hint-toggle{
+    width:100%;
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:14px; font-weight:600;
+    padding:12px 16px;
+    background:#fff;
+    color:var(--accent-deep);
+    border:1px dashed var(--accent);
+    border-radius:8px;
+    cursor:pointer;
+    margin-bottom:10px;
+  }
+  .hint-box{
+    display:none;
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:14.5px;
+    line-height:1.7;
+    background:#f4efe4;
+    color:var(--accent-deep);
+    padding:14px 16px;
+    border-radius:8px;
+    margin-bottom:18px;
+  }
+  .hint-box.show{ display:block; animation:rise .25s ease; }
+
+  .question{
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:16px; font-weight:600; margin-bottom:14px;
+  }
+
+  input[type="text"]{
+    width:100%;
+    font-family:"Noto Serif KR", serif;
+    font-size:18px;
+    text-align:center;
+    padding:14px 16px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  input[type="text"]:focus{ outline:none; border-color:var(--accent); }
+
+  .submit-btn{
+    width:100%;
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:15px; font-weight:700;
+    padding:14px 16px;
+    background:var(--accent-deep);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    margin-bottom:18px;
+  }
+  .submit-btn:active{ transform:scale(0.99); }
+  .submit-btn:disabled{ opacity:0.6; cursor:default; }
+
+  .feedback{
+    display:none;
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    font-size:14.5px; line-height:1.7; padding:16px 18px; border-radius:8px; margin-bottom:18px;
+  }
+  .feedback.show{display:block;}
+  .feedback.ok{background:#eef4ef; color:var(--ok);}
+  .feedback.no{background:#f7ecea; color:var(--wrong);}
+
+  .penalty-box{
+    display:none;
+    text-align:center;
+    background:#f7ecea;
+    border:1px solid var(--wrong);
+    border-radius:8px;
+    padding:20px 16px;
+    margin-bottom:18px;
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+  }
+  .penalty-box.show{ display:block; }
+  .penalty-box .label{
+    font-size:13.5px;
+    color:var(--wrong);
+    margin-bottom:8px;
+  }
+  .penalty-box .timer{
+    font-size:32px;
+    font-weight:700;
+    color:var(--wrong);
+    font-family:"Noto Serif KR",serif;
+    letter-spacing:.02em;
+  }
+
+  .next-box{
+    display:none; background:var(--accent-deep); color:#fff;
+    padding:22px 20px; border-radius:10px; font-family:"Pretendard","Noto Sans KR",sans-serif;
+  }
+  .next-box.show{display:block; animation:rise .35s ease;}
+  @keyframes rise{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+  .next-box .tag{ font-size:12px; letter-spacing:.15em; opacity:.75; text-transform:uppercase; margin-bottom:8px; }
+  .next-box .loc{ font-size:19px; font-weight:700; line-height:1.5; font-family:"Noto Serif KR",serif; }
+
+  footer{
+    margin-top:30px; text-align:center;
+    font-family:"Pretendard","Noto Sans KR",sans-serif; font-size:12px; color:#a39c8c;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="stage-label">질문 원정대 · 3 / 6</div>
+  <div class="progress">
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+
+  <h1>숫자 속에 숨은 답</h1>
+  <div class="sub">방탈출 미션</div>
+
+  <div class="mission">
+    <p>아래 사진을 잘 살펴보고, 빨간 물음표 자리에 들어갈 숫자를 찾아보세요.</p>
+  </div>
+
+  <img class="puzzle-img" src="images/puzzle3.jpg" alt="숫자 방탈출 퍼즐">
+  <div class="img-caption">숫자들 사이의 규칙을 찾아보세요</div>
+
+  <button class="hint-toggle" id="hintToggle">💡 힌트 보기</button>
+  <div class="hint-box" id="hintBox">달력</div>
+
+  <div class="question">물음표 자리에 들어갈 숫자는?</div>
+  <input type="text" id="answerInput" inputmode="numeric" placeholder="숫자를 입력하세요">
+
+  <button class="submit-btn" id="submitBtn">정답 확인</button>
+
+  <div class="feedback" id="feedback"></div>
+
+  <div class="penalty-box" id="penaltyBox">
+    <div class="label">오답이에요. 잠시 후 다시 시도할 수 있어요</div>
+    <div class="timer" id="penaltyTimer">0:30</div>
+  </div>
+
+  <div class="next-box" id="nextBox">
+    <div class="tag">다음 QR을 찾아가세요</div>
+    <div class="loc" id="nextLoc"></div>
+  </div>
+
+  <footer>재송성결교회 · 중학생 수련회 「왜?」</footer>
+</div>
+
+<script>
+  // ===== 이 부분만 장소별로 수정하세요 =====
+  const NEXT_LOCATION = "화장실 앞 정수기 옆";
+  // ==========================================
+
+  document.getElementById('nextLoc').textContent = NEXT_LOCATION;
+
+  const CORRECT_ANSWER = "1";
+
+  const hintToggle = document.getElementById('hintToggle');
+  const hintBox = document.getElementById('hintBox');
+  hintToggle.addEventListener('click', () => {
+    hintBox.classList.toggle('show');
+  });
+
+  const input = document.getElementById('answerInput');
+  const submitBtn = document.getElementById('submitBtn');
+  const feedback = document.getElementById('feedback');
+  const nextBox = document.getElementById('nextBox');
+  const penaltyBox = document.getElementById('penaltyBox');
+  const penaltyTimerEl = document.getElementById('penaltyTimer');
+
+  // 오답 패널티: 30초 → 60초 → 90초 ... 이후로는 90초 유지
+  const PENALTY_STEPS = [30, 60, 90];
+  let wrongCount = 0;
+  let penaltyInterval = null;
+
+  function formatTime(sec){
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ":" + String(s).padStart(2, '0');
+  }
+
+  function lockControls(locked){
+    submitBtn.disabled = locked;
+    input.disabled = locked;
+  }
+
+  function startPenalty(seconds){
+    lockControls(true);
+    penaltyBox.classList.add('show');
+    let remaining = seconds;
+    penaltyTimerEl.textContent = formatTime(remaining);
+
+    penaltyInterval = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(penaltyInterval);
+        penaltyBox.classList.remove('show');
+        lockControls(false);
+        feedback.classList.remove('show');
+        input.value = "";
+        input.focus();
+      } else {
+        penaltyTimerEl.textContent = formatTime(remaining);
+      }
+    }, 1000);
+  }
+
+  function checkAnswer(){
+    const raw = input.value.trim();
+    if (!raw) return;
+
+    feedback.classList.add('show');
+    if (raw === CORRECT_ANSWER) {
+      feedback.classList.remove('no');
+      feedback.classList.add('ok');
+      feedback.textContent = "정답입니다! 잘 찾았어요.";
+      lockControls(true);
+      setTimeout(() => { nextBox.classList.add('show'); }, 400);
+    } else {
+      feedback.classList.remove('ok');
+      feedback.classList.add('no');
+      feedback.textContent = "아직이에요. 힌트를 참고해서 다시 생각해 보세요.";
+
+      const stepIndex = Math.min(wrongCount, PENALTY_STEPS.length - 1);
+      const penaltySeconds = PENALTY_STEPS[stepIndex];
+      wrongCount += 1;
+      startPenalty(penaltySeconds);
+    }
+  }
+
+  submitBtn.addEventListener('click', checkAnswer);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') checkAnswer();
+  });
+</script>
+</body>
+</html>
